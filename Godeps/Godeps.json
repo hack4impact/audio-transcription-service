@@ -20,6 +20,11 @@
 		{
 			"ImportPath": "github.com/justinas/alice",
 			"Rev": "78131a09b9e7bcccbb8a99d8e2f2168bb576e67a"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.0-17-g089c718",
+			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
 		}
 	]
 }
