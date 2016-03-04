@@ -1,13 +1,21 @@
 language: go
 
+go:
+  - 1.6
+
 install:
+  - go get -u github.com/golang/lint/golint
+  - go get -u github.com/qur/withmock
+  - go get -u github.com/qur/withmock/mocktest
+  - go get -u golang.org/x/tools/cmd/goimports
   - go get -u github.com/tools/godep
   - godep restore
-  - go get -u github.com/golang/lint/golint
 
 script:
-  - golint ./...
-  - go test -v -race ./...
+  # this command will run golint on every package but /vendor/
+  - for package in $(go list ./... | grep -v /vendor/); do golint ${package}; done
+  - go vet ./...
+  - make test
   - go build -v ./...
 
 notifications:
