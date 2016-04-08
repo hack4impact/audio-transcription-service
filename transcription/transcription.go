@@ -38,6 +38,18 @@ func msgHeaders(from string, to []string, subject string) string {
 	return strings.Join(msgHeaders, "\r\n")
 }
 
+// StartTranscription transcribes a given file using Sphinx.
+// File name should be in "name.wav" format.
+func StartTranscription(fileName string, command string) error {
+
+	cmd := exec.Command("java", "-jar", command, fileName)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // ConvertAudioIntoWavFormat converts encoded audio into the required format.
 func ConvertAudioIntoWavFormat(fn string) error {
 	// http://cmusphinx.sourceforge.net/wiki/faq
