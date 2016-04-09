@@ -48,7 +48,7 @@ func WriteToMongo(data transcription, url string, username string, password stri
 		Password: password,
 	}
 
-	// obtain session
+	// Obtain session
 	session, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
 		return err
@@ -59,11 +59,13 @@ func WriteToMongo(data transcription, url string, username string, password stri
 
 	c := session.DB("database").C("data")
 
-	// insert data
+	// Insert data
 	err = c.Insert(&data)
 	if err != nil {
 		return err
 	}
+
+	// Retrieve from data base, just to test
 
 	return nil
 }
