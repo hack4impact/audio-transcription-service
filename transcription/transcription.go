@@ -9,7 +9,15 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
+
+	"gopkg.in/mgo.v2"
 )
+
+type transcription struct {
+	TextTranscription string
+	Metadata          string
+}
 
 // SendEmail connects to an email server at host:port, switches to TLS,
 // authenticates on TLS connections using the username and password, and sends
@@ -27,6 +35,36 @@ func SendEmail(username string, password string, host string, port int, to []str
 	if err := smtp.SendMail(addr, auth, from, to, msg); err != nil {
 		return err
 	}
+	return nil
+}
+
+// WriteToMongo takes a string and writes it to the database
+func WriteToMongo(data transcription, url string, username string, password string) error {
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{url},
+		Timeout:  60 * time.Second,
+		Database: "database",
+		Username: username,
+		Password: password,
+	}
+
+	// obtain session
+	session, err := mgo.DialWithInfo(mongoDBDialInfo)
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	session.SetMode(mgo.Monotonic, true)
+
+	c := session.DB("database").C("data")
+
+	// insert data
+	err = c.Insert(&data)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
