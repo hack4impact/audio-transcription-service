@@ -6,7 +6,7 @@ import (
 	"net/http"
 	_ "net/http/pprof" // import for side effects
 
-		"github.com/hack4impact/transcribe4all/web"
+	"github.com/hack4impact/transcribe4all/web"
 )
 
 func main() {
@@ -17,7 +17,12 @@ func main() {
 		// replace this with your actual use of config
 		fmt.Printf("%+v\n", *config)
 	}
-	uploadFileToBackblaze("testfile.wav")
+	url, err := uploadFileToBackblaze("testfile4.wav")
+
+	if err != nil {
+		// replace this with your actual use of the url of the file
+		fmt.Println(url)
+	}
 
 	// serve http
 	http.Handle("/", middlewareRouter)

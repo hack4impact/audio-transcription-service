@@ -1,24 +1,39 @@
 package main
-import (
-  "os"
-  "path/filepath"
-  "gopkg.in/kothar/go-backblaze.v0"
 
+import (
+	"os"
+	"path/filepath"
+
+	"gopkg.in/kothar/go-backblaze.v0"
 )
 
+func uploadFileToBackblaze(filename string) (string, error) {
+	b2, err := backblaze.NewB2(backblaze.Credentials{
+		AccountID:      "23547fcec776",
+		ApplicationKey: "0016ab4da23ef8548aa6d19c77e0eada59ae55764e",
+	})
+	if err != nil {
+		return "", err
+	}
 
-func uploadFileToBackblaze(filename string){
-    b2, _ := backblaze.NewB2(backblaze.Credentials{
-      AccountID: "23547fcec776",
-      ApplicationKey: "0016ab4da23ef8548aa6d19c77e0eada59ae55764e",
-  })
+	bucket, err := b2.Bucket("Hack4Impact")
+	if err != nil {
+		return "", err
+	}
 
-  bucket, _ := b2.Bucket("Hack4Impact")
+	path := filename
+	reader, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
 
-  path:= filename
-  reader, _ := os.Open(path)
-  name := filepath.Base(path)
-  metadata := make(map[string]string)
+	name := filepath.Base(path)
+	metadata := make(map[string]string)
 
-      bucket.UploadFile(name, metadata, reader)
+	_, err = bucket.UploadFile(name, metadata, reader)
+	if err != nil {
+		return "", err
+	}
+
+	return bucket.FileURL(name)
 }
