@@ -1,2 +1,5 @@
 EmailUsername = ""
 EmailPassword = ""
+IBMUsername = ""
+IBMPassword = ""
+Debug = false

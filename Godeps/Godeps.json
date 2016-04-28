@@ -1,7 +1,6 @@
 {
-	"ImportPath": "github.com/hack4impact/audio-transcription-service",
+	"ImportPath": "github.com/hack4impact/transcribe4all",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v59",
 	"Packages": [
 		"./..."
 	],
@@ -10,6 +9,15 @@
 			"ImportPath": "github.com/BurntSushi/toml",
 			"Comment": "v0.1.0-39-ga4eecd4",
 			"Rev": "a4eecd407cf4129fc902ece859a0114e4cf1a7f4"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.2-2-g6ba91e2",
+			"Rev": "6ba91e24c498b49d0363c723e9e2ab2b5b8fd012"
+		},
+		{
+			"ImportPath": "github.com/bakins/logrus-middleware",
+			"Rev": "2f037bcda984f172af9c62c9048a5e6c12fa3179"
 		},
 		{
 			"ImportPath": "github.com/golang/mock/gomock",
@@ -28,6 +36,10 @@
 			"Rev": "26a6070f849969ba72b72256e9f14cf519751690"
 		},
 		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "e2e3d8414d0fbae04004f151979f4e27c6747fe7"
+		},
+		{
 			"ImportPath": "github.com/justinas/alice",
 			"Rev": "78131a09b9e7bcccbb8a99d8e2f2168bb576e67a"
 		},
@@ -35,6 +47,10 @@
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Comment": "v1.0-17-g089c718",
 			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "4f90aeace3a26ad7021961c297b22c42160c7b25"
 		}
 	]
 }

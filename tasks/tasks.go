@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 // Status is the status of the task.
@@ -12,9 +14,9 @@ type Status int
 
 // TaskExecuter executes a series of task functions.
 type TaskExecuter interface {
-	QueueTask(task func() error) string
+	QueueTask(task func(string) error) string
 	GetTaskStatus(id string) Status
-	completeTask(id string, task func() error)
+	completeTask(id string, task func(string) error)
 }
 
 type concurrentStatusMap struct {
@@ -82,9 +84,11 @@ func NewTaskExecuter() TaskExecuter {
 // QueueTask initializes a new task, taking a generic task function. If the
 // task panics, the panic will be caught. However, if the task launches another
 // goroutine which panics, the panic cannot be caught.
-func (ex *defaultExecuter) QueueTask(task func() error) string {
+func (ex *defaultExecuter) QueueTask(task func(string) error) string {
 	id := generateID(20)
 	ex.cMap.put(id, INPROGRESS)
+	log.WithField("task", id).
+		Info("Task started")
 	go ex.completeTask(id, task)
 	return id
 }
@@ -97,19 +101,27 @@ func (ex *defaultExecuter) GetTaskStatus(id string) Status {
 	return NOTFOUND
 }
 
-func (ex *defaultExecuter) completeTask(id string, task func() error) {
+func (ex *defaultExecuter) completeTask(id string, task func(string) error) {
 	defer func() {
 		if r := recover(); r != nil {
+			log.WithField("task", id).
+				Error("Task failed")
 			ex.cMap.put(id, FAILURE)
 		}
 	}()
 
 	// Run the task.
-	if err := task(); err != nil {
+	if err := task(id); err != nil {
 		ex.cMap.put(id, FAILURE)
+		log.WithFields(log.Fields{
+			"task":  id,
+			"error": err.Error(),
+		}).Error("Task failed")
 		return
 	}
 
+	log.WithField("task", id).
+		Info("Task succeeded")
 	ex.cMap.put(id, SUCCESS)
 }
 
