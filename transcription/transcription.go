@@ -8,6 +8,7 @@ import (
 	"net/smtp"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -90,6 +91,73 @@ func fileNameFromURL(url string) string {
 	tokens := strings.Split(url, "/")
 	fileName := tokens[len(tokens)-1]
 	return fileName
+}
+
+// SplitFlacFile ensures that the input audio files to IBM are less than 100mb.
+func SplitFlacFile(fn string) error {
+	// http://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold
+	// The answer ultimately calculates the length of each audio chunk in seconds.
+	// chunk_length_in_sec = math.ceil((duration_in_sec * file_split_size ) / wav_file_size)
+	// If ConvertAudioIntoWavFormat is called on fn, a 95MB chunk is always 2968 seconds.
+	// In the above equation, there is one constant: file_split_size = 95000000 bytes.
+	// duration_in_sec is used to calculate wav_file_size, so it is canceled out in the ratio.
+	// wav_file_size = (sample_rate * bit_rate * channel_count * duration_in_sec) / 8
+	// sample_rate = 44100, bit_rate = 16, channels_count = 1 (stereo: 2, Sphinx: 1)
+	// Afterwards, every Wav file is converted back into Flac format.
+	err := ConvertAudioIntoWavFormat(fn)
+	if err != nil {
+		return err
+	}
+	wavFileName := strings.Split(fn, ".")[0] + ".wav"
+
+	numChunks, err := getNumChunks(fn)
+	if err != nil {
+		return err
+	}
+
+	chunkTime := 2968
+	ss := 0
+	for i := 0; i < numChunks; i++ {
+		if err := extractAudioSegment(wavFileName+strconv.Itoa(i), ss, chunkTime); err != nil {
+			return err
+		}
+		if err := ConvertAudioIntoFlacFormat(wavFileName + strconv.Itoa(i)); err != nil {
+			return err
+		}
+		ss -= 5
+	}
+	return nil
+}
+
+func getNumChunks(fn string) (int, error) {
+	file, err := os.Open(fn)
+	if err != nil {
+		return -1, err
+	}
+	defer file.Close()
+
+	stat, err := file.Stat()
+	if err != nil {
+		return -1, err
+	}
+	wavFileSize := stat.Size()
+	numChunks := 0
+	fileSplitSize := 95000000
+	fiveSecondsInBytes := 16000 // 5s / 2968s * 9500000 bytes
+	bytesUsed := 0
+	for bytesUsed < wavFileSize {
+		numChunks++
+		bytesUsed += int64(fileSplitSize) - int64(fiveSecondsInBytes)
+	}
+}
+
+func extractAudioSegment(fn string, ss int, t int) error {
+	// -ss: starting second, -t: time in seconds
+	cmd := exec.Command("ffmpeg", "-i", fn, "-ss", strconv.Itoa(ss), "-t", strconv.Itoa(t), fn)
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // MakeTaskFunction returns a task function for transcription using transcription functions.
