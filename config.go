@@ -13,7 +13,7 @@ func parseConfigFile(filename string) (*AppConfig, error) {
 	return &config, nil
 }
 
-// Config is an example
+// AppConfig is an example
 type AppConfig struct {
 	EmailUsername         string
 	EmailPassword         string
