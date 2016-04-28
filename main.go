@@ -4,9 +4,21 @@ package main
 import (
 	"net/http"
 	_ "net/http/pprof" // import for side effects
+	"os"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/hack4impact/transcribe4all/config"
 	"github.com/hack4impact/transcribe4all/web"
 )
+
+func init() {
+	log.SetOutput(os.Stderr)
+	if config.Config.Debug {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
+}
 
 func main() {
 	router := web.NewRouter()
