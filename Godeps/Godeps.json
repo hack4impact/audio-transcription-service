@@ -1,7 +1,6 @@
 {
-	"ImportPath": "github.com/hack4impact/audio-transcription-service",
+	"ImportPath": "github.com/hack4impact/transcribe4all",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v59",
 	"Packages": [
 		"./..."
 	],
@@ -28,6 +27,10 @@
 			"Rev": "26a6070f849969ba72b72256e9f14cf519751690"
 		},
 		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "e2e3d8414d0fbae04004f151979f4e27c6747fe7"
+		},
+		{
 			"ImportPath": "github.com/justinas/alice",
 			"Rev": "78131a09b9e7bcccbb8a99d8e2f2168bb576e67a"
 		},
@@ -35,6 +38,10 @@
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Comment": "v1.0-17-g089c718",
 			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "4f90aeace3a26ad7021961c297b22c42160c7b25"
 		}
 	]
 }

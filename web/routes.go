@@ -71,7 +71,7 @@ func initiateTranscriptionJobHandlerJSON(w http.ResponseWriter, r *http.Request)
 	}
 
 	executer := tasks.DefaultTaskExecuter
-	id := executer.QueueTask(transcription.MakeTaskFunction(jsonData.AudioURL, jsonData.EmailAddresses, jsonData.SearchWords))
+	id := executer.QueueTask(transcription.MakeIBMTaskFunction(jsonData.AudioURL, jsonData.EmailAddresses, jsonData.SearchWords))
 
 	fmt.Fprintf(w, "Accepted task %s!", id)
 }
@@ -80,7 +80,7 @@ func initiateTranscriptionJobHandlerJSON(w http.ResponseWriter, r *http.Request)
 // decodes it into a transcriptionJobData struct, and starts a transcription task.
 func initiateTranscriptionJobHandler(w http.ResponseWriter, r *http.Request) {
 	executer := tasks.DefaultTaskExecuter
-	id := executer.QueueTask(transcription.MakeTaskFunction(r.FormValue("url"), r.Form["emails"], r.Form["words"]))
+	id := executer.QueueTask(transcription.MakeIBMTaskFunction(r.FormValue("url"), r.Form["emails"], r.Form["words"]))
 
 	log.Print(w, "Accepted task %d!", id)
 	http.Redirect(w, r, "/", http.StatusFound)

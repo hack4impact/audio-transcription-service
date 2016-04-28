@@ -3,8 +3,8 @@ package web
 
 import (
 	"net/http"
-	"os"
 
+	logMiddleware "github.com/bakins/logrus-middleware"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -28,9 +28,10 @@ func NewRouter() *mux.Router {
 // ApplyMiddleware wraps the router in some middleware. This middleware includes
 // logging and gzip compression.
 func ApplyMiddleware(router http.Handler) http.Handler {
-	stderrLoggingHandler := func(http.Handler) http.Handler {
-		return handlers.LoggingHandler(os.Stderr, router)
+	loggingHandler := func(h http.Handler) http.Handler {
+		m := new(logMiddleware.Middleware)
+		return m.Handler(h, "")
 	}
-	middlewareRouter := alice.New(handlers.CompressHandler, stderrLoggingHandler).Then(router)
+	middlewareRouter := alice.New(handlers.CompressHandler, loggingHandler).Then(router)
 	return middlewareRouter
 }
