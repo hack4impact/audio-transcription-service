@@ -6,6 +6,7 @@
 $ go get github.com/hack4impact/transcribe4all
 $ cd $GOPATH/src/github.com/hack4impact/transcribe4all
 ```
+To set up Sphinx for transcription read the following [instructions.](Sphinx/README.md)
 
 ## Dependency management
 
