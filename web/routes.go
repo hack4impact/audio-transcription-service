@@ -59,8 +59,6 @@ var routes = []route{
 	},
 }
 
-var Config AppConfig
-
 // initiateTranscriptionJobHandlerJSON takes a POST request containing a json object,
 // decodes it into a transcriptionJobData struct, and starts a transcription task.
 func initiateTranscriptionJobHandlerJSON(w http.ResponseWriter, r *http.Request) {
@@ -105,10 +103,6 @@ func jobStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func formHandler(w http.ResponseWriter, r *http.Request) {
-	Config, err := parseConfigFile("../config.toml")
-	if err != nil {
-		panic(fmt.Sprintf("%+v\n", *Config))
-	}
 	t, _ := template.ParseFiles("templates/form.html")
 	_ = t.Execute(w, Config.TranscriptionServices)
 }
