@@ -9,13 +9,15 @@ import (
 	"github.com/hack4impact/transcribe4all/web"
 )
 
+// Config object
+var Config AppConfig
+
 func main() {
 	router := web.NewRouter()
 	middlewareRouter := web.ApplyMiddleware(router)
-	config, configErr := parseConfigFile("config.toml")
-	if configErr == nil {
-		// replace this with your actual use of config
-		fmt.Printf("%+v\n", *config)
+	Config, err := parseConfigFile("config.toml")
+	if err != nil {
+		panic(fmt.Sprintf("%+v\n", *Config))
 	}
 
 	// serve http
