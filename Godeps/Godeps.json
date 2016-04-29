@@ -1,6 +1,7 @@
 {
 	"ImportPath": "github.com/hack4impact/transcribe4all",
 	"GoVersion": "go1.6",
+	"GodepVersion": "v59",
 	"Packages": [
 		"./..."
 	],
@@ -35,6 +36,18 @@
 			"Rev": "78131a09b9e7bcccbb8a99d8e2f2168bb576e67a"
 		},
 		{
+			"ImportPath": "github.com/pquerna/ffjson/ffjson",
+			"Rev": "a4cf0d628f2b6d823c648db52670b87a4f610a67"
+		},
+		{
+			"ImportPath": "github.com/pquerna/ffjson/fflib/v1",
+			"Rev": "a4cf0d628f2b6d823c648db52670b87a4f610a67"
+		},
+		{
+			"ImportPath": "github.com/pquerna/ffjson/fflib/v1/internal",
+			"Rev": "a4cf0d628f2b6d823c648db52670b87a4f610a67"
+		},
+		{
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Comment": "v1.0-17-g089c718",
 			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
@@ -42,6 +55,10 @@
 		{
 			"ImportPath": "gopkg.in/check.v1",
 			"Rev": "4f90aeace3a26ad7021961c297b22c42160c7b25"
+		},
+		{
+			"ImportPath": "gopkg.in/kothar/go-backblaze.v0",
+			"Rev": "a643a0dd6376b3c838b3a241a0479ada30c46329"
 		}
 	]
 }
