@@ -12,9 +12,9 @@ install:
   - godep restore
 
 script:
-  # this command will run golint on every package but /vendor/
+  # run commands on every package but /vendor/
   - for package in $(go list ./... | grep -v /vendor/); do golint ${package}; done
-  - go vet ./...
+  - for package in $(go list ./... | grep -v /vendor/); do go vet ${package}; done
   - make test
   - go build -v ./...
 

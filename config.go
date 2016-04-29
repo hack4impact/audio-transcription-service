@@ -20,4 +20,6 @@ type Config struct {
 	AccountID      string
 	ApplicationKey string
 	BucketName     string
+	IBMUsername    string
+	IBMPassword    string
 }

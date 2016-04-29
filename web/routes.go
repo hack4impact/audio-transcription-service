@@ -3,7 +3,9 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -21,6 +23,7 @@ type route struct {
 type transcriptionJobData struct {
 	AudioURL       string   `json:"audioURL"`
 	EmailAddresses []string `json:"emailAddresses"`
+	SearchWords    []string `json:"searchWords"`
 }
 
 var routes = []route{
@@ -29,6 +32,12 @@ var routes = []route{
 		"POST",
 		"/add_job",
 		initiateTranscriptionJobHandler,
+	},
+	route{
+		"add_job_json",
+		"POST",
+		"/add_job_json",
+		initiateTranscriptionJobHandlerJSON,
 	},
 	route{
 		"health",
@@ -42,11 +51,17 @@ var routes = []route{
 		"/job_status/{id}",
 		jobStatusHandler,
 	},
+	route{
+		"form",
+		"GET",
+		"/",
+		formHandler,
+	},
 }
 
-// initiateTranscriptionJobHandle takes a POST request containing a json object,
-// decodes it into an audioData struct, and returns appropriate message.
-func initiateTranscriptionJobHandler(w http.ResponseWriter, r *http.Request) {
+// initiateTranscriptionJobHandlerJSON takes a POST request containing a json object,
+// decodes it into a transcriptionJobData struct, and starts a transcription task.
+func initiateTranscriptionJobHandlerJSON(w http.ResponseWriter, r *http.Request) {
 	var jsonData transcriptionJobData
 
 	// unmarshal from the response body directly into our struct
@@ -56,9 +71,19 @@ func initiateTranscriptionJobHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	executer := tasks.DefaultTaskExecuter
-	id := executer.QueueTask(transcription.MakeTaskFunction(jsonData.AudioURL, jsonData.EmailAddresses))
+	id := executer.QueueTask(transcription.MakeTaskFunction(jsonData.AudioURL, jsonData.EmailAddresses, jsonData.SearchWords))
 
 	fmt.Fprintf(w, "Accepted task %s!", id)
+}
+
+// initiateTranscriptionJobHandler takes a POST request from a form,
+// decodes it into a transcriptionJobData struct, and starts a transcription task.
+func initiateTranscriptionJobHandler(w http.ResponseWriter, r *http.Request) {
+	executer := tasks.DefaultTaskExecuter
+	id := executer.QueueTask(transcription.MakeTaskFunction(r.FormValue("url"), r.Form["emails"], r.Form["words"]))
+
+	log.Print(w, "Accepted task %d!", id)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // healthHandler returns a 200 response to the client if the server is healthy.
@@ -74,4 +99,9 @@ func jobStatusHandler(w http.ResponseWriter, r *http.Request) {
 	executer := tasks.DefaultTaskExecuter
 	status := executer.GetTaskStatus(id)
 	io.WriteString(w, status.String())
+}
+
+func formHandler(w http.ResponseWriter, r *http.Request) {
+	t, _ := template.ParseFiles("templates/form.html")
+	_ = t.Execute(w, transcriptionJobData{})
 }
