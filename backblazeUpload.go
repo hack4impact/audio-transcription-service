@@ -7,16 +7,16 @@ import (
 	"gopkg.in/kothar/go-backblaze.v0"
 )
 
-func uploadFileToBackblaze(filename string) (string, error) {
+func uploadFileToBackblaze(filename string, accountID string, applicationKey string, bucketName string) (string, error) {
 	b2, err := backblaze.NewB2(backblaze.Credentials{
-		AccountID:      "23547fcec776",
-		ApplicationKey: "0016ab4da23ef8548aa6d19c77e0eada59ae55764e",
+		AccountID:      accountID,
+		ApplicationKey: applicationKey,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	bucket, err := b2.Bucket("Hack4Impact")
+	bucket, err := b2.Bucket(bucketName)
 	if err != nil {
 		return "", err
 	}

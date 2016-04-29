@@ -1,2 +1,5 @@
-EmailUsername = ""
-EmailPassword = ""
+EmailUsername  = ""
+EmailPassword  = ""
+AccountID      = ""
+ApplicationKey = ""
+BucketName     = ""

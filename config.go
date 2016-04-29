@@ -1,7 +1,6 @@
 package main
 
 import (
-
 	"github.com/BurntSushi/toml"
 )
 
@@ -16,6 +15,9 @@ func parseConfigFile(filename string) (*Config, error) {
 
 // Config is an example
 type Config struct {
-	EmailUsername string
-	EmailPassword string
+	EmailUsername  string
+	EmailPassword  string
+	AccountID      string
+	ApplicationKey string
+	BucketName     string
 }
