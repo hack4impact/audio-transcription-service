@@ -16,8 +16,8 @@ func main() {
 	if configErr == nil {
 		// replace this with your actual use of config
 		fmt.Printf("%+v\n", *config)
-
-		url, err := uploadFileToBackblaze("testfile5R.wav", config.AccountID, config.ApplicationKey, config.BucketName)
+		// Sample use of uploadFileToBackblaze
+		url, err := uploadFileToBackblaze("replaceWithNameOfFile.wav", config.AccountID, config.ApplicationKey, config.BucketName)
 		if err != nil {
 			// replace this with error handling
 			fmt.Println(err)
