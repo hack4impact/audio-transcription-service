@@ -17,8 +17,11 @@ func main() {
 		// replace this with your actual use of config
 		fmt.Printf("%+v\n", *config)
 
-		url, err := uploadFileToBackblaze("testfile4.wav", config.AccountID, config.ApplicationKey, config.BucketName)
+		url, err := uploadFileToBackblaze("testfile5R.wav", config.AccountID, config.ApplicationKey, config.BucketName)
 		if err != nil {
+			// replace this with error handling
+			fmt.Println(err)
+		} else {
 			// replace this with your actual use of the url of the file
 			fmt.Println(url)
 		}
