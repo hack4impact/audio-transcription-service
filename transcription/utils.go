@@ -3,6 +3,8 @@
 package transcription
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/smtp"
@@ -49,9 +51,10 @@ func ConvertAudioIntoFormat(filePath, fileExt string) (string, error) {
 	// -ar 16000 sets frequency to required 16khz
 	// -ac 1 sets the number of audio channels to 1
 	newPath := filePath + "." + fileExt
+	os.Remove(newPath) // If it already exists, ffmpeg will throw an error
 	cmd := exec.Command("ffmpeg", "-i", filePath, "-ar", "16000", "-ac", "1", newPath)
-	if err := cmd.Run(); err != nil {
-		return "", err
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return "", errors.New(err.Error() + "\nCommand Output:" + string(out))
 	}
 	return newPath, nil
 }
@@ -120,7 +123,7 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 
 		// TODO: save data to MongoDB and file to Backblaze.
 
-		if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, "IBM Transcription Done!", transcript); err != nil {
+		if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, fmt.Sprintf("IBM Transcription %s Complete", id), transcript); err != nil {
 			return err
 		}
 

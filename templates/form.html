@@ -40,8 +40,13 @@
               url     : ['empty', 'url'],
               emails   : ['empty', 'email'],
             }
-          })
-        ;
+          });
+          $('.message .close')
+            .on('click', function() {
+              $(this)
+                .closest('.message')
+                .transition('fade');
+            });
         // $('#emails').tokenfield();
       })
     ;
@@ -88,6 +93,15 @@
       <div class="ui fluid large blue submit button">Submit</div>
 
       <div class="ui error message"></div>
+      {{range .}}
+        <div class="ui positive message">
+          <i class="close icon"></i>
+          <div class="header">
+            {{.Title}}
+          </div>
+          <p>{{.Body}}</p>
+        </div>
+      {{end}}
 
     </form>
   </div>

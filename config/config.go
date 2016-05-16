@@ -13,7 +13,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// log.Info(Config)
 	log.Infof("%+v", Config)
 }
 
