@@ -85,6 +85,7 @@ func initiateTranscriptionJobHandlerJSON(w http.ResponseWriter, r *http.Request)
 // initiateTranscriptionJobHandler takes a POST request from a form,
 // decodes it into a transcriptionJobData struct, and starts a transcription task.
 func initiateTranscriptionJobHandler(w http.ResponseWriter, r *http.Request) {
+	log.Print(r.FormValue("url"))
 	executer := tasks.DefaultTaskExecuter
 	id := executer.QueueTask(transcription.MakeIBMTaskFunction(r.FormValue("url"), r.Form["emails"], r.Form["words"]))
 
