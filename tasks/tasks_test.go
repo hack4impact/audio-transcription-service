@@ -9,12 +9,12 @@ import (
 
 func TestTaskErrorLeadsToErrorStatus(t *testing.T) {
 	assert := assert.New(t)
-	errorTask := func() error {
+	errorTask := func(a string) error {
 		return errors.New("This is the error text.")
 	}
 
 	ex := NewTaskExecuter()
-	id := ex.QueueTask(errorTask)
+	id := ex.QueueTask(errorTask, func(a, b string) {})
 	status := ex.GetTaskStatus(id)
 	for status == INPROGRESS {
 		status = ex.GetTaskStatus(id)
@@ -24,12 +24,12 @@ func TestTaskErrorLeadsToErrorStatus(t *testing.T) {
 
 func TestTaskPanicLeadsToErrorStatus(t *testing.T) {
 	assert := assert.New(t)
-	errorTask := func() error {
+	errorTask := func(a string) error {
 		panic("AHHH!!!")
 	}
 
 	ex := NewTaskExecuter()
-	id := ex.QueueTask(errorTask)
+	id := ex.QueueTask(errorTask, func(a, b string) {})
 	status := ex.GetTaskStatus(id)
 	for status == INPROGRESS {
 		status = ex.GetTaskStatus(id)
@@ -39,12 +39,12 @@ func TestTaskPanicLeadsToErrorStatus(t *testing.T) {
 
 func TestTaskOkLeadsToSuccessStatus(t *testing.T) {
 	assert := assert.New(t)
-	errorTask := func() error {
+	errorTask := func(a string) error {
 		return nil
 	}
 
 	ex := NewTaskExecuter()
-	id := ex.QueueTask(errorTask)
+	id := ex.QueueTask(errorTask, func(a, b string) {})
 	status := ex.GetTaskStatus(id)
 	for status == INPROGRESS {
 		status = ex.GetTaskStatus(id)
@@ -54,14 +54,14 @@ func TestTaskOkLeadsToSuccessStatus(t *testing.T) {
 
 func TestInProgressStatus(t *testing.T) {
 	assert := assert.New(t)
-	errorTask := func() error {
+	errorTask := func(a string) error {
 		for true {
 		}
 		return nil
 	}
 
 	ex := NewTaskExecuter()
-	id := ex.QueueTask(errorTask)
+	id := ex.QueueTask(errorTask, func(a, b string) {})
 	status := ex.GetTaskStatus(id)
 	assert.Equal(INPROGRESS, status)
 }

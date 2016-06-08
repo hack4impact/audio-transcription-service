@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"encoding/base64"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
+	"github.com/juju/errors"
 )
 
 // IBMResult is the result of an IBM transcription. See
@@ -45,7 +46,7 @@ func TranscribeWithIBM(filePath string, IBMUsername string, IBMPassword string) 
 	dialer := websocket.DefaultDialer
 	ws, _, err := dialer.Dial(url, header)
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	defer ws.Close()
 
@@ -59,17 +60,21 @@ func TranscribeWithIBM(filePath string, IBMUsername string, IBMPassword string) 
 		"interim_results":    false,
 		"inactivity_timeout": -1,
 	}
+
 	if err = ws.WriteJSON(requestArgs); err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
+	log.Debug("Starting transcription using IBM")
+
 	if err = uploadFileWithWebsocket(ws, filePath); err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
+	log.Debugf("Successfully uploaded %s to IBM", filePath)
+
 	// write empty message to indicate end of uploading file
 	if err = ws.WriteMessage(websocket.BinaryMessage, []byte{}); err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
-	log.Println("File uploaded")
 
 	// IBM must receive a message every 30 seconds or it will close the websocket.
 	// This code concurrently writes a message every 5 second until returning.
@@ -81,9 +86,10 @@ func TranscribeWithIBM(filePath string, IBMUsername string, IBMPassword string) 
 	for {
 		err := ws.ReadJSON(&result)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		if len(result.Results) > 0 {
+			log.Debugf("IBM has returned results")
 			return result, nil
 		}
 	}
@@ -97,7 +103,7 @@ func basicAuth(username, password string) string {
 func uploadFileWithWebsocket(ws *websocket.Conn, filePath string) error {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return errors.Trace(err)
 	}
 
 	r := bufio.NewReader(f)
@@ -109,10 +115,10 @@ func uploadFileWithWebsocket(ws *websocket.Conn, filePath string) error {
 			break
 		}
 		if err != nil && err != io.EOF {
-			return err
+			return errors.Trace(err)
 		}
 		if err := ws.WriteMessage(websocket.BinaryMessage, buffer); err != nil {
-			return err
+			return errors.Trace(err)
 		}
 	}
 	return nil

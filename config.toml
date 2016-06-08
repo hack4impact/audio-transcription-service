@@ -1,7 +1,8 @@
-EmailUsername  = ""
-EmailPassword  = ""
-AccountID      = ""
+EmailUsername = ""
+EmailPassword = ""
+IBMUsername = ""
+IBMPassword = ""
+AccountID = ""
 ApplicationKey = ""
 BucketName     = ""
-IBMUsername    = ""
-IBMPassword    = ""
+Debug = false

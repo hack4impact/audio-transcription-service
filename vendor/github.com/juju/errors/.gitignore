@@ -21,7 +21,3 @@ _testmain.go
 
 *.exe
 *.test
-*.prof
-
-transcribe4all
-config.toml

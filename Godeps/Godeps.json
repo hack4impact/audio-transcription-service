@@ -12,6 +12,15 @@
 			"Rev": "a4eecd407cf4129fc902ece859a0114e4cf1a7f4"
 		},
 		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.2-2-g6ba91e2",
+			"Rev": "6ba91e24c498b49d0363c723e9e2ab2b5b8fd012"
+		},
+		{
+			"ImportPath": "github.com/bakins/logrus-middleware",
+			"Rev": "2f037bcda984f172af9c62c9048a5e6c12fa3179"
+		},
+		{
 			"ImportPath": "github.com/golang/mock/gomock",
 			"Rev": "bd3c8e81be01eef76d4b503f5e687d2d1354d2d9"
 		},
@@ -28,8 +37,26 @@
 			"Rev": "26a6070f849969ba72b72256e9f14cf519751690"
 		},
 		{
+			"ImportPath": "github.com/gorilla/securecookie",
+			"Comment": "v1.1",
+			"Rev": "667fe4e3466a040b780561fe9b51a83a3753eefc"
+		},
+		{
+			"ImportPath": "github.com/gorilla/sessions",
+			"Rev": "a1216e0aed834aa9074063dd4085f5c3df8d1fab"
+		},
+		{
 			"ImportPath": "github.com/gorilla/websocket",
 			"Rev": "e2e3d8414d0fbae04004f151979f4e27c6747fe7"
+		},
+		{
+			"ImportPath": "github.com/jordan-wright/email",
+			"Comment": "v2.2-9-gfd70310",
+			"Rev": "fd703108daeb23d77c124d12978e9b6c4f28f034"
+		},
+		{
+			"ImportPath": "github.com/juju/errors",
+			"Rev": "b2c7a7da5b2995941048f60146e67702a292e468"
 		},
 		{
 			"ImportPath": "github.com/justinas/alice",
