@@ -20,14 +20,19 @@
       body {
         background-color: #DADADA;
       }
-      body > .grid {
+      #mainContent {
         height: 100%;
+        padding-bottom: 50px;
+        position: relative;
       }
       .image {
         margin-top: -100px;
       }
       .column {
         max-width: 450px;
+      }
+      .footer {
+        width: 100%;
       }
     </style>
 
@@ -53,7 +58,7 @@
     </script>
   </head>
 <body>
-<div class="ui middle aligned center aligned grid">
+<div id="mainContent" class="ui middle aligned center aligned grid">
   <div class="column">
     <h2 class="ui blue image header">
       <img src="static/logo.png" class="image">
@@ -98,7 +103,7 @@
     </form>
   </div>
 </div>
-<div class="ui inverted vertical footer segment">
+<div class="ui fixed bottom sticky inverted vertical footer segment">
   <div class="ui center aligned container">
     <p>Made with <i class="heart red icon"></i>by <a href="http://hack4impact.org/" target="_blank">Hack4Impact</a></p>
   </div>
