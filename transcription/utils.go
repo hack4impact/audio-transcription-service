@@ -86,45 +86,43 @@ func filePathFromURL(url string) string {
 	return filePath
 }
 
-// SplitFlacFile ensures that the input audio files to IBM are less than 100mb, with 5 seconds of redundancy between files.
-func SplitFlacFile(fn string) error {
+// SplitWavFile ensures that the input audio files to IBM are less than 100mb, with 5 seconds of redundancy between files.
+func SplitWavFile(wavFileName string) ([]string, error) {
 	// http://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold
 	// The Stack Overflow answer ultimately calculated the length of each audio chunk in seconds.
 	// chunk_length_in_sec = math.ceil((duration_in_sec * file_split_size ) / wav_file_size)
-	// Invariant: If ConvertAudioIntoWavFormat is called on fn, a 95MB chunk of resulting Wav file is always 2968 seconds.
+	// Invariant: If ConvertAudioIntoWavFormat is called on filePath, a 95MB chunk of resulting Wav file is always 2968 seconds.
 	// In the above equation, there is one constant: file_split_size = 95000000 bytes.
 	// duration_in_sec is used to calculate wav_file_size, so it is canceled out in the ratio.
 	// wav_file_size = (sample_rate * bit_rate * channel_count * duration_in_sec) / 8
 	// sample_rate = 44100, bit_rate = 16, channels_count = 1 (stereo: 2, but Sphinx prefers 1)
 	// As a chunk of the Wav file is extracted using FFMPEG, it is converted back into Flac format.
-	wavFileName, err := ConvertAudioIntoFormat(fn, "wav")
+	numChunks, err := getNumChunks(wavFileName)
 	if err != nil {
-		return err
-	}
-
-	numChunks, err := getNumChunks(fn)
-	if err != nil {
-		return err
+		return []string{}, err
 	}
 
 	chunkLengthInSeconds := 2968
+	names := make([]string, numChunks)
 	for i := 0; i < numChunks; i++ {
 		// 5 seconds of redundancy for each chunk after the first
 		startingSecond := i*chunkLengthInSeconds - (i-1)*5
 		newFileName := wavFileName + strconv.Itoa(i)
 		if err := extractAudioSegment(newFileName, startingSecond, chunkLengthInSeconds); err != nil {
-			return err
+			return []string{}, err
 		}
 		if _, err := ConvertAudioIntoFormat(newFileName, "flac"); err != nil {
-			return err
+			return []string{}, err
 		}
+		names[i] = newFileName
 	}
-	return nil
+
+	return names, nil
 }
 
 // getNumChunks gets file size in MB, divides by 95 MB, and add 1 more chunk in case
-func getNumChunks(fn string) (int, error) {
-	file, err := os.Open(fn)
+func getNumChunks(filePath string) (int, error) {
+	file, err := os.Open(filePath)
 	if err != nil {
 		return -1, err
 	}
@@ -144,9 +142,9 @@ func getNumChunks(fn string) (int, error) {
 }
 
 // extractAudioSegment uses FFMPEG to write a new audio file starting at a given time of a given length
-func extractAudioSegment(fn string, ss int, t int) error {
+func extractAudioSegment(filePath string, ss int, t int) error {
 	// -ss: starting second, -t: time in seconds
-	cmd := exec.Command("ffmpeg", "-i", fn, "-ss", strconv.Itoa(ss), "-t", strconv.Itoa(t), fn)
+	cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", strconv.Itoa(ss), "-t", strconv.Itoa(t), filePath)
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -173,6 +171,15 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 
 		log.WithField("task", id).
 			Debugf("Converted file %s to %s", filePath, flacPath)
+
+		wavPath, err := ConvertAudioIntoFormat(filePath, "wav")
+		if err != nil {
+			return errors.Trace(err)
+		}
+		defer os.Remove(wavPath)
+
+		log.WithField("task", id).
+			Debugf("Converted file %s to %s", flacPath, wavPath)
 
 		ibmResult, err := TranscribeWithIBM(flacPath, config.Config.IBMUsername, config.Config.IBMPassword)
 		if err != nil {
