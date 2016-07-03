@@ -184,7 +184,7 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 		}
 
 		log.WithField("task", id).
-			Debugf("Split file %s to %d file(s)", filePath, len(wavPath))
+			Debugf("Split file %s into %d file(s)", filePath, len(wavPath))
 
 		for i := 0; i < len(wavPaths); i++ {
 			filePath := wavPaths[i]
