@@ -2,4 +2,7 @@ EmailUsername = ""
 EmailPassword = ""
 IBMUsername = ""
 IBMPassword = ""
+AccountID = ""
+ApplicationKey = ""
+BucketName     = ""
 Debug = false

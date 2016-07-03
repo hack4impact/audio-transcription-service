@@ -9,9 +9,12 @@ import (
 	"net/smtp"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/kothar/go-backblaze.v0"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jordan-wright/email"
@@ -139,4 +142,39 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 			Debugf("Sent email to %v", emailAddresses)
 	}
 	return task, onFailure
+}
+
+// UploadFileToBackblaze uploads the given gile to the given backblaze bucket
+func UploadFileToBackblaze(filePath string, accountID string, applicationKey string, bucketName string) (string, error) {
+	b2, err := backblaze.NewB2(backblaze.Credentials{
+		AccountID:      accountID,
+		ApplicationKey: applicationKey,
+	})
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	bucket, err := b2.Bucket(bucketName)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	name := filepath.Base(filePath)
+	metadata := make(map[string]string) // empty metadata
+
+	_, err = bucket.UploadFile(name, metadata, file)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+
+	url, err := bucket.FileURL(name)
+	if err != nil {
+		return "", errors.Trace(err)
+	}
+	return url, nil
 }
