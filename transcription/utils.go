@@ -180,7 +180,7 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 			return errors.Trace(err)
 		}
 		for i := 0; i < len(wavPaths); i++ {
-			defer os.Remove(wavPath)
+			defer os.Remove(wavPaths[i])
 		}
 
 		log.WithField("task", id).
