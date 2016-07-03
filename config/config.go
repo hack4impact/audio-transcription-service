@@ -27,10 +27,13 @@ func parseConfigFile(config *AppConfig, filename string) error {
 
 // AppConfig contains the app config variables.
 type AppConfig struct {
-	EmailUsername string
-	EmailPassword string
-	IBMUsername   string
-	IBMPassword   string
-	Debug         bool
-	SecretKey     string
+	EmailUsername  string
+	EmailPassword  string
+	IBMUsername    string
+	IBMPassword    string
+	AccountID      string
+	ApplicationKey string
+	BucketName     string
+	Debug          bool
+	SecretKey      string
 }
