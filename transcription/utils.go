@@ -90,7 +90,7 @@ func filePathFromURL(url string) string {
 }
 
 // SplitWavFile ensures that the input audio files to IBM are less than 100mb, with 5 seconds of redundancy between files.
-func SplitWavFile(wavFileName string) ([]string, error) {
+func SplitWavFile(wavFilePath string) ([]string, error) {
 	// http://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold
 	// The Stack Overflow answer ultimately calculated the length of each audio chunk in seconds.
 	// chunk_length_in_sec = math.ceil((duration_in_sec * file_split_size ) / wav_file_size)
@@ -100,7 +100,7 @@ func SplitWavFile(wavFileName string) ([]string, error) {
 	// wav_file_size = (sample_rate * bit_rate * channel_count * duration_in_sec) / 8
 	// sample_rate = 44100, bit_rate = 16, channels_count = 1 (stereo: 2, but Sphinx prefers 1)
 	// As a chunk of the Wav file is extracted using FFMPEG, it is converted back into Flac format.
-	numChunks, err := getNumChunks(wavFileName)
+	numChunks, err := getNumChunks(wavFilePath)
 	if err != nil {
 		return []string{}, err
 	}
@@ -110,14 +110,14 @@ func SplitWavFile(wavFileName string) ([]string, error) {
 	for i := 0; i < numChunks; i++ {
 		// 5 seconds of redundancy for each chunk after the first
 		startingSecond := i*chunkLengthInSeconds - (i-1)*5
-		newFileName := wavFileName + strconv.Itoa(i)
-		if err := extractAudioSegment(newFileName, startingSecond, chunkLengthInSeconds); err != nil {
+		newFilePath := wavFilePath + strconv.Itoa(i)
+		if err := extractAudioSegment(newFilePath, startingSecond, chunkLengthInSeconds); err != nil {
 			return []string{}, err
 		}
-		if _, err := ConvertAudioIntoFormat(newFileName, "flac"); err != nil {
+		if _, err := ConvertAudioIntoFormat(newFilePath, "flac"); err != nil {
 			return []string{}, err
 		}
-		names[i] = newFileName
+		names[i] = newFilePath
 	}
 
 	return names, nil
@@ -166,15 +166,6 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 		log.WithField("task", id).
 			Debugf("Downloaded file at %s to %s", audioURL, filePath)
 
-		flacPath, err := ConvertAudioIntoFormat(filePath, "flac")
-		if err != nil {
-			return errors.Trace(err)
-		}
-		defer os.Remove(flacPath)
-
-		log.WithField("task", id).
-			Debugf("Converted file %s to %s", filePath, flacPath)
-
 		wavPath, err := ConvertAudioIntoFormat(filePath, "wav")
 		if err != nil {
 			return errors.Trace(err)
@@ -182,26 +173,48 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 		defer os.Remove(wavPath)
 
 		log.WithField("task", id).
-			Debugf("Converted file %s to %s", flacPath, wavPath)
+			Debugf("Converted file %s to %s", filePath, wavPath)
 
-		ibmResult, err := TranscribeWithIBM(flacPath, config.Config.IBMUsername, config.Config.IBMPassword)
+		wavPaths, err := SplitWavFile(wavPath)
 		if err != nil {
 			return errors.Trace(err)
 		}
-		transcript := GetTranscript(ibmResult)
-
-		log.WithField("task", id).
-			Info(transcript)
-
-		// TODO: save data to MongoDB and file to Backblaze.
-
-		if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, fmt.Sprintf("IBM Transcription %s Complete", id), "The transcript is below. It can also be found in the database."+"\n\n"+transcript); err != nil {
-			return errors.Trace(err)
+		for i := 0; i < len(wavPaths); i++ {
+			defer os.Remove(wavPath)
 		}
 
 		log.WithField("task", id).
-			Debugf("Sent email to %v", emailAddresses)
+			Debugf("Split file %s to %d file(s)", filePath, len(wavPath))
 
+		for i := 0; i < len(wavPaths); i++ {
+			filePath := wavPaths[i]
+			flacPath, err := ConvertAudioIntoFormat(filePath, "flac")
+			if err != nil {
+				return errors.Trace(err)
+			}
+			defer os.Remove(flacPath)
+
+			log.WithField("task", id).
+				Debugf("Converted file %s to %s", filePath, flacPath)
+
+			ibmResult, err := TranscribeWithIBM(flacPath, config.Config.IBMUsername, config.Config.IBMPassword)
+			if err != nil {
+				return errors.Trace(err)
+			}
+			transcript := GetTranscript(ibmResult)
+
+			log.WithField("task", id).
+				Info(transcript)
+
+			// TODO: save data to MongoDB and file to Backblaze.
+
+			if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, fmt.Sprintf("IBM Transcription %s Complete", id), "The transcript is below. It can also be found in the database."+"\n\n"+transcript); err != nil {
+				return errors.Trace(err)
+			}
+
+			log.WithField("task", id).
+				Debugf("Sent email to %v", emailAddresses)
+		}
 		return nil
 	}
 
