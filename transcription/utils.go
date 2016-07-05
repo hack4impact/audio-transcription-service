@@ -1,5 +1,7 @@
 // Package transcription implements functions for the manipulation and
 // transcription of audio files.
+//
+// TODO(sandlerben): This package should be refactored into several more files.
 package transcription
 
 import (
