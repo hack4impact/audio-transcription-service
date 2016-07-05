@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"gopkg.in/kothar/go-backblaze.v0"
+	"gopkg.in/mgo.v2"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jordan-wright/email"
@@ -157,6 +158,7 @@ func extractAudioSegment(filePath string, ss int, t int) error {
 }
 
 // MakeIBMTaskFunction returns a task function for transcription using IBM transcription functions.
+// TODO(#52): Quite a lot of the transcription process could be done concurrently.
 func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords []string) (task func(string) error, onFailure func(string, string)) {
 	task = func(id string) error {
 		filePath, err := DownloadFileFromURL(audioURL)
@@ -203,14 +205,22 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 			if err != nil {
 				return errors.Trace(err)
 			}
-			transcript := GetTranscript(ibmResult)
+			transcription := GetTranscription(ibmResult)
 
-			log.WithField("task", id).
-				Info(transcript)
+			// log.WithField("task", id).
+			// 	Info(transcript)
 
-			// TODO: save data to MongoDB and file to Backblaze.
+			audioURL, err := UploadFileToBackblaze(flacPath, config.Config.BackblazeAccountID, config.Config.BackblazeApplicationKey, "transcriptions")
+			if err != nil {
+				return errors.Trace(err)
+			}
+			transcription.AudioURL = audioURL
 
-			if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, fmt.Sprintf("IBM Transcription %s Complete", id), "The transcript is below. It can also be found in the database."+"\n\n"+transcript); err != nil {
+			if err := WriteToMongo(transcription, config.Config.MongoURL); err != nil {
+				return errors.Trace(err)
+			}
+
+			if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, fmt.Sprintf("IBM Transcription %s Complete", id), "The transcript is below. It can also be found in the database."+"\n\n"+transcription.Transcript); err != nil {
 				return errors.Trace(err)
 			}
 
@@ -266,4 +276,55 @@ func UploadFileToBackblaze(filePath string, accountID string, applicationKey str
 		return "", errors.Trace(err)
 	}
 	return url, nil
+}
+
+type mgoLogger struct{}
+
+func (mgoLogger) Output(_ int, s string) error {
+	log.Debug(s)
+	return nil
+}
+
+type Transcription struct {
+	Transcript  string
+	AudioURL    string
+	CompletedAt time.Time
+	Metadata    Metadata
+}
+type Metadata struct {
+	timestamps  []Timestamp
+	confidences []Confidence
+}
+
+type Timestamp struct {
+	word      string
+	startTime float64
+	endTime   float64
+}
+
+type Confidence struct {
+	word  string
+	score float64
+}
+
+// WriteToMongo takes a string and writes it to the database
+func WriteToMongo(data *Transcription, url string) error {
+	mgo.SetLogger(mgoLogger{})
+	session, err := mgo.Dial(url)
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	session.SetMode(mgo.Monotonic, true)
+
+	c := session.DB("database").C("transcriptions")
+
+	// Insert data
+	err = c.Insert(&data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
