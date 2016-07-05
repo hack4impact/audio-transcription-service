@@ -1,17 +1,112 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title></title>
-    <link rel="stylesheet" type="text/css" href="static/semantic/dist/semantic.min.css">
-    <script src="static/semantic/dist/semantic.min.js"></script>
-    <script src="static/jquery.min.js"></script>
+    <!-- Standard Meta -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+     <!-- Site Properties -->
+    <title>Transcribe4All</title>
+    <link rel="stylesheet" type="text/css" href="static/semantic/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="static/semantic-tokenfield/semantic-tokenfield.min.css">
+    <link rel="icon" type="image/png" href="static/logo.png"/>
+
+    <script src="static/jquery-1.12.0.min.js"></script>
+    <script src="static/semantic/semantic.min.js"></script>
+    <script src="static/semantic-tokenfield/semantic-tokenfield.min.js"></script>
+
+    <style type="text/css">
+      body {
+        background-color: #DADADA;
+      }
+      #mainContent {
+        height: 100%;
+        padding-bottom: 50px;
+        position: relative;
+      }
+      .image {
+        margin-top: -100px;
+      }
+      .column {
+        max-width: 450px;
+      }
+      .footer {
+        width: 100%;
+      }
+    </style>
+
+    <script>
+    $(document)
+      .ready(function() {
+        $('.ui.form')
+          .form({
+            fields: {
+              url     : ['empty', 'url'],
+              emails   : ['empty', 'email'],
+            }
+          });
+          $('.message .close')
+            .on('click', function() {
+              $(this)
+                .closest('.message')
+                .transition('fade');
+            });
+        // $('#emails').tokenfield();
+      })
+    ;
+    </script>
   </head>
 <body>
-  <form action="/add_job" method="POST">
-    <div>URL:<input type="url" name="AudioURL" required></div>
-    <div>Email Addresses:<input type="email" name="EmailAddresses" multiple required></div>
-    <div><input type="submit" value="Submit"></div>
-  </form>
-</form>
+<div id="mainContent" class="ui middle aligned center aligned grid">
+  <div class="column">
+    <h2 class="ui blue image header">
+      <img src="static/logo.png" class="image">
+      <div class="content">
+        Transcribe4All
+      </div>
+    </h2>
+    <form class="ui large form" action="/add_job" method="POST">
+      <div class="ui stacked segment">
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="file audio outline icon"></i>
+            <input type="url" name="url" placeholder="Audio URL">
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="mail icon"></i>
+            <input type="email" id="emails" name="emails" placeholder="E-mail addresses" multiple>
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="search icon"></i>
+            <input type="text" id="words" name="words" placeholder="Search words" multiple>
+          </div>
+        </div>
+      </div>
+      <div class="ui fluid large blue submit button">Submit</div>
+
+      <div class="ui error message"></div>
+      {{range .}}
+        <div class="ui positive message">
+          <i class="close icon"></i>
+          <div class="header">
+            {{.Title}}
+          </div>
+          <p>{{.Body}}</p>
+        </div>
+      {{end}}
+
+    </form>
+  </div>
+</div>
+<div class="ui fixed bottom sticky inverted vertical footer segment">
+  <div class="ui center aligned container">
+    <p>Made with <i class="heart red icon"></i>by <a href="http://hack4impact.org/" target="_blank">Hack4Impact</a></p>
+  </div>
+</div>
 </body>
 </html>
