@@ -152,15 +152,15 @@ func GetTranscription(res *IBMResult) *Transcription {
 		transcriptBuffer.WriteString(bestHypothesis.Transcript)
 		for _, timestamp := range bestHypothesis.Timestamps {
 			timestamps = append(timestamps, Timestamp{
-				word:      timestamp[0].(string),
-				startTime: timestamp[1].(float64),
-				endTime:   timestamp[2].(float64),
+				Word:      timestamp[0].(string),
+				StartTime: timestamp[1].(float64),
+				EndTime:   timestamp[2].(float64),
 			})
 		}
 		for _, confidence := range bestHypothesis.WordConfidence {
 			confidences = append(confidences, Confidence{
-				word:  confidence[0].(string),
-				score: confidence[1].(float64),
+				Word:  confidence[0].(string),
+				Score: confidence[1].(float64),
 			})
 		}
 	}
@@ -169,8 +169,8 @@ func GetTranscription(res *IBMResult) *Transcription {
 		Transcript:  transcriptBuffer.String(),
 		CompletedAt: time.Now(),
 		Metadata: Metadata{
-			timestamps:  timestamps,
-			confidences: confidences,
+			Timestamps:  timestamps,
+			Confidences: confidences,
 		},
 	}
 	return transcription

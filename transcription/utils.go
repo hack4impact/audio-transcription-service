@@ -87,6 +87,8 @@ func DownloadFileFromURL(url string) (string, error) {
 func filePathFromURL(url string) string {
 	tokens := strings.Split(url, "/")
 	filePath := tokens[len(tokens)-1]
+	filePath = strings.Split(filePath, ".")[0]
+
 	// ensure the filePath is unique by appending timestamp
 	filePath = filePath + strconv.Itoa(int(time.Now().UnixNano()))
 	return filePath
@@ -105,7 +107,10 @@ func SplitWavFile(wavFilePath string) ([]string, error) {
 	// As a chunk of the Wav file is extracted using FFMPEG, it is converted back into Flac format.
 	numChunks, err := getNumChunks(wavFilePath)
 	if err != nil {
-		return []string{}, err
+		return []string{}, errors.Trace(err)
+	}
+	if numChunks == 1 {
+		return []string{wavFilePath}, nil
 	}
 
 	chunkLengthInSeconds := 2968
@@ -113,12 +118,12 @@ func SplitWavFile(wavFilePath string) ([]string, error) {
 	for i := 0; i < numChunks; i++ {
 		// 5 seconds of redundancy for each chunk after the first
 		startingSecond := i*chunkLengthInSeconds - (i-1)*5
-		newFilePath := wavFilePath + strconv.Itoa(i)
-		if err := extractAudioSegment(newFilePath, startingSecond, chunkLengthInSeconds); err != nil {
-			return []string{}, err
+		newFilePath := strconv.Itoa(i) + "_" + wavFilePath
+		if err := extractAudioSegment(wavFilePath, newFilePath, startingSecond, chunkLengthInSeconds); err != nil {
+			return []string{}, errors.Trace(err)
 		}
 		if _, err := ConvertAudioIntoFormat(newFilePath, "flac"); err != nil {
-			return []string{}, err
+			return []string{}, errors.Trace(err)
 		}
 		names[i] = newFilePath
 	}
@@ -130,13 +135,13 @@ func SplitWavFile(wavFilePath string) ([]string, error) {
 func getNumChunks(filePath string) (int, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return -1, err
+		return -1, errors.Trace(err)
 	}
 	defer file.Close()
 
 	stat, err := file.Stat()
 	if err != nil {
-		return -1, err
+		return -1, errors.Trace(err)
 	}
 
 	wavFileSize := int(stat.Size())
@@ -148,11 +153,11 @@ func getNumChunks(filePath string) (int, error) {
 }
 
 // extractAudioSegment uses FFMPEG to write a new audio file starting at a given time of a given length
-func extractAudioSegment(filePath string, ss int, t int) error {
+func extractAudioSegment(inFilePath string, outFilePath string, ss int, t int) error {
 	// -ss: starting second, -t: time in seconds
-	cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", strconv.Itoa(ss), "-t", strconv.Itoa(t), filePath)
-	if err := cmd.Run(); err != nil {
-		return err
+	cmd := exec.Command("ffmpeg", "-i", inFilePath, "-ss", strconv.Itoa(ss), "-t", strconv.Itoa(t), outFilePath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return errors.New(err.Error() + "\nOutput:\n" + string(out))
 	}
 	return nil
 }
@@ -188,50 +193,53 @@ func MakeIBMTaskFunction(audioURL string, emailAddresses []string, searchWords [
 		}
 
 		log.WithField("task", id).
-			Debugf("Split file %s into %d file(s)", filePath, len(wavPath))
+			Debugf("Split file %s into %d file(s)", filePath, len(wavPaths))
 
-		for i := 0; i < len(wavPaths); i++ {
-			filePath := wavPaths[i]
-			flacPath, err := ConvertAudioIntoFormat(filePath, "flac")
-			if err != nil {
-				return errors.Trace(err)
-			}
-			defer os.Remove(flacPath)
-
-			log.WithField("task", id).
-				Debugf("Converted file %s to %s", filePath, flacPath)
-
-			ibmResult, err := TranscribeWithIBM(flacPath, config.Config.IBMUsername, config.Config.IBMPassword)
-			if err != nil {
-				return errors.Trace(err)
-			}
-			transcription := GetTranscription(ibmResult)
-
-			// log.WithField("task", id).
-			// 	Info(transcript)
-
-			audioURL, err := UploadFileToBackblaze(flacPath, config.Config.BackblazeAccountID, config.Config.BackblazeApplicationKey, "transcriptions")
-			if err != nil {
-				return errors.Trace(err)
-			}
-			transcription.AudioURL = audioURL
-
-			if err := WriteToMongo(transcription, config.Config.MongoURL); err != nil {
-				return errors.Trace(err)
-			}
-
-			if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, fmt.Sprintf("IBM Transcription %s Complete", id), "The transcript is below. It can also be found in the database."+"\n\n"+transcription.Transcript); err != nil {
-				return errors.Trace(err)
-			}
-
-			log.WithField("task", id).
-				Debugf("Sent email to %v", emailAddresses)
+			// for i := 0; i < len(wavPaths); i++ {
+		// wavPath := wavPaths[i]
+		flacPath, err := ConvertAudioIntoFormat(wavPath, "flac")
+		if err != nil {
+			return errors.Trace(err)
 		}
+		defer os.Remove(flacPath)
+
+		log.WithField("task", id).
+			Debugf("Converted file %s to %s", wavPath, flacPath)
+
+		ibmResult, err := TranscribeWithIBM(flacPath, config.Config.IBMUsername, config.Config.IBMPassword)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		// }
+		transcription := GetTranscription(ibmResult)
+
+		audioURL, err := UploadFileToBackblaze(filePath, config.Config.BackblazeAccountID, config.Config.BackblazeApplicationKey, config.Config.BackblazeBucket)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		transcription.AudioURL = audioURL
+
+		log.WithField("task", id).
+			Debugf("Uploaded %s to backblaze", filePath)
+
+		if err := WriteToMongo(transcription, config.Config.MongoURL); err != nil {
+			return errors.Trace(err)
+		}
+
+		log.WithField("task", id).
+			Debugf("Wrote to mongo")
+
+		if err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 587, emailAddresses, fmt.Sprintf("IBM Transcription %s Complete", id), "The transcript is below. It can also be found in the database."+"\n\n"+transcription.Transcript); err != nil {
+			return errors.Trace(err)
+		}
+
+		log.WithField("task", id).
+			Debugf("Sent email to %v", emailAddresses)
 		return nil
 	}
 
 	onFailure = func(id string, errMessage string) {
-		err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 25, emailAddresses, fmt.Sprintf("IBM Transcription %s Failed", id), errMessage)
+		err := SendEmail(config.Config.EmailUsername, config.Config.EmailPassword, "smtp.gmail.com", 587, emailAddresses, fmt.Sprintf("IBM Transcription %s Failed", id), errMessage)
 		if err != nil {
 			log.WithField("task", id).
 				Debugf("Could not send error email to %v because of the error %v", emailAddresses, err.Error())
@@ -285,26 +293,31 @@ func (mgoLogger) Output(_ int, s string) error {
 	return nil
 }
 
+// Transcription contains the full transcription and other information.
 type Transcription struct {
 	Transcript  string
 	AudioURL    string
 	CompletedAt time.Time
 	Metadata    Metadata
 }
+
+// Metadata contains timestamps and confidences.
 type Metadata struct {
-	timestamps  []Timestamp
-	confidences []Confidence
+	Timestamps  []Timestamp
+	Confidences []Confidence
 }
 
+// Timestamp is when a word occurs.
 type Timestamp struct {
-	word      string
-	startTime float64
-	endTime   float64
+	Word      string
+	StartTime float64
+	EndTime   float64
 }
 
+// Confidence is the estimated likelihood (from 0 to 1) that the transribed word is correct.
 type Confidence struct {
-	word  string
-	score float64
+	Word  string
+	Score float64
 }
 
 // WriteToMongo takes a string and writes it to the database

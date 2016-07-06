@@ -3,6 +3,7 @@ package tasks
 
 import (
 	"math/rand"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -130,7 +131,8 @@ func (ex *defaultExecuter) completeTask(id string, task func(string) error, onFa
 	defer func() {
 		if r := recover(); r != nil {
 			log.WithField("task", id).
-				Error("Task failed")
+				Errorln("Task failed", r)
+			debug.PrintStack()
 			go onFailure(id, "The error message is below. Please check logs for more details."+"\n\n"+"panic occurred")
 			ex.cMap.setStatus(id, FAILURE)
 		}
