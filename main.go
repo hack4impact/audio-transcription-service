@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	_ "net/http/pprof" // import for side effects
 	"os"
@@ -27,7 +28,10 @@ func main() {
 	// serve http
 	http.Handle("/", middlewareRouter)
 	http.Handle("/static/", http.FileServer(http.Dir(".")))
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+
+	log.Infof("Server is running at http://localhost:%d", config.Config.Port)
+	addr := fmt.Sprintf(":%d", config.Config.Port)
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Error(err)
 	}
 }
