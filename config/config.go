@@ -29,11 +29,13 @@ func parseConfigFile(config *AppConfig, filename string) error {
 type AppConfig struct {
 	BackblazeAccountID      string
 	BackblazeApplicationKey string
+	BackblazeBucket         string
+	Debug                   bool
 	EmailUsername           string
 	EmailPassword           string
 	IBMUsername             string
 	IBMPassword             string
 	MongoURL                string
+	Port                    int
 	SecretKey               string
-	Debug                   bool
 }
