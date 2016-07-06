@@ -79,6 +79,14 @@
 			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
 		},
 		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "4f90aeace3a26ad7021961c297b22c42160c7b25"
+		},
+		{
+			"ImportPath": "gopkg.in/kothar/go-backblaze.v0",
+			"Rev": "1965d4d011b96421ace094c562df6eeaa44e8c70"
+		},
+		{
 			"ImportPath": "gopkg.in/mgo.v2",
 			"Comment": "r2016.02.04-1-gb6e2fa3",
 			"Rev": "b6e2fa371e64216a45e61072a96d4e3859f169da"
